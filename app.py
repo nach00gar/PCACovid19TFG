@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from statsmodels.tsa.seasonal import seasonal_decompose
+#from statsmodels.tsa.seasonal import seasonal_decompose
 
 def getCovidData():
     df = pd.read_csv("https://storage.googleapis.com/covid19-open-data/v3/location/ES.csv")
@@ -119,7 +119,7 @@ def getSmoothTrendBasic(df, days):
     newdf['date'] = pd.to_datetime(newdf['date'])
     newdf = newdf.groupby(pd.Grouper(key='date', freq=str(days)+'D')).sum().reset_index()
     return newdf
-
+'''
 def getSmoothTrendComplex(df):
     for i in newdf.columns:
         if i!='date':
@@ -135,6 +135,7 @@ def getSmoothTrendComplex(df):
 
 
 import matplotlib.pyplot as plt
+'''
 
 df = getCovidData()
 df = cleanFull(df)
