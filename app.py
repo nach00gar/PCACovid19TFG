@@ -179,6 +179,7 @@ sp = px.line(df, x="date", y=["school_closing", "workplace_closing", "cancel_pub
 
 # Inicializar la aplicación Dash
 app = dash.Dash(__name__)
+server = app.server
 
 # Definir la estructura de la aplicación
 app.layout = html.Div([
