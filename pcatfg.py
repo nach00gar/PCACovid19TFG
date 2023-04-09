@@ -305,4 +305,4 @@ def update_initial_graph(valores, children, jsonified_cleaned_data):
 
 # Ejecutar la aplicación
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=False)
