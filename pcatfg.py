@@ -58,55 +58,26 @@ def applyPCA(df):
     return comps, pca
 
 def showExplainedVariance(pca):
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.bar(
-        x      = np.arange(pca.n_components_) + 1,
-        height = pca.explained_variance_ratio_
-    )
-
-    for x, y in zip(np.arange(pca.n_components_) + 1, pca.explained_variance_ratio_):
-        label = round(y, 3)
-        ax.annotate(
-            label,
-            (x,y),
-            textcoords="offset points",
-            xytext=(0,10),
-            ha='center'
-        )
-
-    ax.set_xticks(np.arange(pca.n_components_) + 1)
-    ax.set_ylim(0, 1.1)
-    ax.set_title('Porcentaje de varianza explicada por cada componente')
-    ax.set_xlabel('Componente principal')
-    ax.set_ylabel('Por. varianza explicada')
-    plt.show()
+    ejex = np.arange(pca.n_components_) + 1
+    ejey = pca.explained_variance_ratio_
+    return px.line(df, x=ejex, y=ejey, text=ejey)
 
 
 def showCumulativeVariance(pca):
     prop_varianza_acum = pca.explained_variance_ratio_.cumsum()
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.plot(
-        np.arange(pca.n_components_) + 1,
-        prop_varianza_acum,
-        marker = 'o'
-    )
+    ejex = np.arange(pca.n_components_) + 1
+    ejey = prop_varianza_acum
+    ejey = [round(y, 4) for y in ejey]
+    
+    fig = px.line(x=ejex, y=ejey, text=ejey)
 
-    for x, y in zip(np.arange(pca.n_components_) + 1, prop_varianza_acum):
-        label = round(y, 3)
-        ax.annotate(
-            label,
-            (x,y),
-            textcoords="offset points",
-            xytext=(0,10),
-            ha='center'
-        )
-        
-        ax.set_ylim(0, 1.1)
-        ax.set_xticks(np.arange(pca.n_components_) + 1)
-        ax.set_title('Porcentaje de varianza explicada acumulada')
-        ax.set_xlabel('Componente principal')
-        ax.set_ylabel('Por. varianza acumulada');
-    plt.show()
+    fig.update_layout(title='Porcentaje de varianza explicada acumulada',
+                   xaxis_title='Componente principal',
+                   yaxis_title='Varianza acumulada')
+    fig.update_xaxes(range=[0.8, pca.n_components_+ 0.2])
+    fig.update_yaxes(range=[0, 1.1])
+    fig.update_traces(textposition='top center')
+    return fig
 
 def getSmoothTrendBasic(df, days):
     newdf = df.copy()
@@ -147,7 +118,7 @@ pcwithnormvariables = pd.concat([pc, normalizado], axis=1)
 #correlationMatrix(normalizado)
 #plt.show()
 
-newdf = getSmoothTrendBasic(df, 6)
+newdf = getSmoothTrendBasic(df, 7)
 
 
 
@@ -345,4 +316,4 @@ def download_comp_data(n_clicks, jsonified_cleaned_data):
 
 # Ejecutar la aplicación
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run_server(debug=True)
