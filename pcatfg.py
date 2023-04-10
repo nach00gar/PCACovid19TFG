@@ -156,9 +156,12 @@ from dash import dcc
 from dash import html
 from datetime import date
 import plotly.express as px
+import plotly.io as pio
 import pandas as pd
 
 import time
+
+pio.templates.default = "plotly_dark"
 
 # Crear un dataframe de ejemplo
 df = newdf
@@ -184,20 +187,29 @@ server = app.server
 # Definir la estructura de la aplicación
 app.layout = html.Div([
     html.H1(children='Análisis de componentes principales: COVID 19'),
-    dcc.RadioItems(options = ['Básicas', 'Infectados','Fallecidos', 'Hospitalizados', 'UCI', 'Sociopolíticas'], value='Básicas', id='radius'),
+    html.H2(children='Exploración de variables'),
+    html.P(children='En esta sección puedes explorar los datos de las distintas, olas, están separados por grupos comparables, el gráfico es interactivo y puedes ajustar los ejes. También puedes activar o desactivar las variables en la barra de la derecha. Se pueden resetear con el botón de arriba a la derecha.'),
+    dcc.RadioItems(options = ['Básicas', 'Infectados','Fallecidos', 'Hospitalizados', 'UCI', 'Sociopolíticas'], value='Básicas', id='radius', className='dash-radioitems'),
+    html.Button("Descargar datos originales en .CSV", id="btn-download-1", className='buttons'),
+    dcc.Download(id="download-dataframe-csv"),
     dcc.Graph(figure=fig, id='graph'),
+    html.P(children='Una vez hayas terminado de explorar, selecciona el rango de fechas en el que aplicar el método, puedes hacerlo tanto arrastrando en el gráfico como con el calendario.'),
+    
     dcc.DatePickerRange(
         id='picker-range',
         min_date_allowed=date(2020, 2, 1),
         max_date_allowed=date(2022, 3, 28),
         start_date=date(2020, 2, 1),
-        end_date=date(2022, 3, 28)
+        end_date=date(2022, 3, 28),
     ),
-    html.Button('APLICA EL MÉTODO DE COMPONENTES PRINCIPALES', id='applymethod', n_clicks=None),
+    html.Button('APLICA EL MÉTODO DE COMPONENTES PRINCIPALES', id='applymethod', n_clicks=None, className='buttons'),
+    html.Button("Descargar componentes en .CSV", id="btn-download-2", className='buttons', style={'visibility':'hidden'}),
+    dcc.Download(id="download-components-csv"),
     html.Div([], id="components-graph"),
     dcc.Store(id='intermediate-value'),
     #html.Div(id='selected-range')
 ])
+
 
 # Definir la función de callback para actualizar el rango
 @app.callback(
@@ -257,6 +269,7 @@ def update_initial_graph(d1, d2, value):
 @app.callback(
     dash.dependencies.Output("components-graph", "children"),
     dash.dependencies.Output("intermediate-value", "data"),
+    dash.dependencies.Output("btn-download-2", "style"),
     dash.dependencies.Input("applymethod", "n_clicks"),
     dash.dependencies.State("components-graph", "children"),
     dash.dependencies.State("picker-range", "start_date"),
@@ -276,15 +289,20 @@ def apply_method(n_clicks, children, ini, fin):
         pcnormal = normalizePC(pc)
         pcwithnormvariables = pd.concat([pcnormal, normalizado], axis=1)
 
-        full = px.line(pcwithnormvariables, x="date", y=[1, 2, 3])
+        full = px.line(pcwithnormvariables, x="date", y=[1, 2])
+        
+        cv = showCumulativeVariance(stats)
 
         if children:
-            children[0]["props"]["figure"] = full
+            children[1]["props"]["figure"] = full
+            children[3]["props"]["figure"] = cv
         else:
+            children.append(html.H2(children='Resultados obtenidos:'))
             children.append(dcc.Graph(figure=full, id='full-graph'))
             children.append(dcc.Dropdown(variables, multi=True, placeholder="Seleccione variables para normalizarlas y comparar", id='dropdown'))
-
-    return children, pcwithnormvariables.to_json(date_format='iso', orient='split')
+            children.append(dcc.Graph(figure=cv, id='cumulative', style={'width': '50%'}))
+            
+    return children, pcwithnormvariables.to_json(date_format='iso', orient='split'), {'visibility':'visible'}
 
 
 @app.callback(
@@ -301,6 +319,28 @@ def update_initial_graph(valores, children, jsonified_cleaned_data):
     children[0]["props"]["figure"]=full
     
     return children[0]["props"]["figure"]
+
+
+@app.callback(
+    dash.dependencies.Output('download-dataframe-csv', 'data'),
+    dash.dependencies.Input('btn-download-1', 'n_clicks'),
+    prevent_initial_call=True
+)
+def download_original_data(n_clicks):
+    print(df)
+    return dcc.send_data_frame(df.set_index('date').to_csv, "cleaned_data.csv")
+
+
+@app.callback(
+    dash.dependencies.Output('download-components-csv', 'data'),
+    dash.dependencies.Input('btn-download-2', 'n_clicks'),
+    dash.dependencies.State("intermediate-value", "data"),
+    prevent_initial_call=True
+)
+def download_comp_data(n_clicks, jsonified_cleaned_data):
+    readdf = pd.read_json(jsonified_cleaned_data, orient='split')
+    return dcc.send_data_frame(readdf.set_index('date')[1].to_csv, "components.csv")
+    
 
 
 # Ejecutar la aplicación
