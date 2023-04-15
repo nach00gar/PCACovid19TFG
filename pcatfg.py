@@ -266,10 +266,11 @@ def apply_method(n_clicks, children, ini, fin):
 
         if children:
             children[1]["props"]["figure"] = full
-            children[3]["props"]["figure"] = cv
+            children[4]["props"]["figure"] = cv
         else:
             children.append(html.H2(children='Resultados obtenidos:'))
             children.append(dcc.Graph(figure=full, id='full-graph'))
+            children.append(html.P(children='En el selector, puedes escoger variables para normalizarlas en media y varianza para comparar las tendencias con la primera componente principal.'))
             children.append(dcc.Dropdown(variables, multi=True, placeholder="Seleccione variables para normalizarlas y comparar", id='dropdown'))
             children.append(dcc.Graph(figure=cv, id='cumulative', style={'width': '50%'}))
             
