@@ -1,7 +1,7 @@
 # PCA Covid 19 TFG
 My BSc final thesis uses Principal Components Analysis to determine significant variables in the evolution of the Covid 19 pandemic.
 
-Web Application is deployed via Google Cloud App Engine at:
+Web Application WAS deployed via Google Cloud App Engine at:
 
 https://pca-tfg-igarachv.oa.r.appspot.com
 
